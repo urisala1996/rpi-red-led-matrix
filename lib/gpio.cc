@@ -81,7 +81,7 @@
 
 #define PWM_CTL_CLRF1 (1<<6)	// CH1 Clear Fifo (1 Clears FIFO 0 has no effect)
 #define PWM_CTL_USEF1 (1<<5)	// CH1 Use Fifo (0=data reg transmit 1=Fifo used for transmission)
-#define PWM_CTL_POLA1 (1<<4)	// CH1 Polarity (0=(0=low 1=high) 1=(1=low 0=high)
+#define PWM_CTL_POLA1 (0<<4) //#define PWM_CTL_POLA1 (1<<4)	// CH1 Polarity (0=(0=low 1=high) 1=(1=low 0=high)
 #define PWM_CTL_SBIT1 (1<<3)	// CH1 Silence Bit (state of output when 0 transmission takes place)
 #define PWM_CTL_MODE1 (1<<1)	// CH1 Mode (0=pwm 1=serialiser mode)
 #define PWM_CTL_PWEN1 (1<<0)	// CH1 Enable (0=disable 1=enable)
@@ -420,9 +420,9 @@ public:
   }
 
   virtual void SendPulse(int time_spec_number) {
-    io_->ClearBits(bits_);
-    Timers::sleep_nanos(nano_specs_[time_spec_number]);
     io_->SetBits(bits_);
+    Timers::sleep_nanos(nano_specs_[time_spec_number]);
+    io_->ClearBits(bits_);
   }
 
 private:

@@ -334,8 +334,12 @@ protected:
   void MapPanel(int x, int y, int *matrix_x, int *matrix_y,
                 const int vblock_is_even, const int vblock_is_odd,
                 const int even_vblock_shift, const int odd_vblock_shift) const {
-    *matrix_x = tile_width_ * (1 + vblock_is_even + 2 * (x / tile_width_))
-      - (x % tile_width_) - 1;
+    // *matrix_x = tile_width_ * (1 + vblock_is_even + 2 * (x / tile_width_)) - (x % tile_width_) - 1;
+    int base = (x/8)*32;
+    int offset = (3-((y%8)/2))*8;
+    int dx = x%8;
+
+    *matrix_x = base + offset + dx;
     *matrix_y = (y % tile_height_) + tile_height_ * (y / (tile_height_ * 2));
   }
 };
@@ -444,13 +448,61 @@ public:
   P10Outdoor32x16HalfScanMapper() : MultiplexMapperBase("P10Outdoor32x16HalfScan", 4) {}
 
   void MapSinglePanel(int x, int y, int *matrix_x, int *matrix_y) const {
-    int base = (x/8)*32;
-    bool reverse = (y%4)/2 == 0;
+/*    int base = (x/8)*32;
+    int tile_height = 4;
     int offset = (3-((y%8)/2))*8;
     int dx = x%8;
 
     *matrix_y = (y/8 == 0) ? ((y%2 == 0) ? 0:1) : ((y%2 == 0) ? 2:3);
-    *matrix_x = base + (reverse ? offset + (7-dx) : offset + dx);
+    *matrix_x = base + offset + dx;
+*/
+    if (y / 4 == 0) {
+		*matrix_y = y % 4;
+		if (x / 8 == 0) {
+			*matrix_x = x + 24;
+		} else if (x / 8 == 1) {
+			*matrix_x = x + 48;
+		} else if (x / 8 == 2) {
+			*matrix_x = x + 72;
+		} else if (x / 8 == 3) {
+			*matrix_x = x + 96;
+		}
+	} else if (y / 4 == 1) {
+		*matrix_y = y % 4;
+		if (x / 8 == 0) {
+			*matrix_x = x + 16;
+		} else if (x / 8 == 1) {
+			*matrix_x = x + 40;
+		} else if (x / 8 == 2) {
+			*matrix_x = x + 64;
+		} else if (x / 8 == 3) {
+			*matrix_x = x + 88;
+		}
+
+	} else if (y / 4 == 2) {
+		*matrix_y = y % 4;
+		if (x / 8 == 0) {
+			*matrix_x = x + 8;
+		} else if (x / 8 == 1) {
+			*matrix_x = x + 32;
+		} else if (x / 8 == 2) {
+			*matrix_x = x + 56;
+		} else if (x / 8 == 3) {
+			*matrix_x = x + 80;
+		}
+
+	} else if (y / 4 == 3) {
+		*matrix_y = y % 4;
+		if (x / 8 == 0) {
+			*matrix_x = x;
+		} else if (x / 8 == 1) {
+			*matrix_x = x + 24;
+		} else if (x / 8 == 2) {
+			*matrix_x = x + 48;
+		} else if (x / 8 == 3) {
+			*matrix_x = x + 72;
+		}
+	} 
   }
 };
 

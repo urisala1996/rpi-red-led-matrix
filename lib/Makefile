@@ -157,7 +157,7 @@ HARDWARE_DESC?=regular
 # want to try this define to get a more reasonable canvas mapping.
 # This option is typically _not_ needed, only use when you attempt to connect
 # some oddball old (typically one-colored) display, such as Hub12.
-#DEFINES+=-DONLY_SINGLE_SUB_PANEL
+DEFINES+=-DONLY_SINGLE_SUB_PANEL
 
 # If someone gives additional values on the make commandline e.g.
 # make USER_DEFINES="-DSHOW_REFRESH_RATE"
