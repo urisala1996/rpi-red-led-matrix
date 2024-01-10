@@ -18,13 +18,13 @@ from array import array
 
 number_of_rows_per_panel = 16
 number_of_columns_per_panel = 32
-number_of_panels = 4
+number_of_panels = 6
 parallel = 1
 
 # Art-Net Variables
 
-display_size_x = 32*4
-display_size_y = 16
+display_size_x = 32*3
+display_size_y = 16*2
 universum_start = 0
 universum_count = 26
 channel_per_univers = 510
@@ -35,7 +35,7 @@ frameBuffer = None
 frameBufferCounter = 0
 rgbframeLength = 0
 #Number of sequences to store in buffer
-seqBufferSize = 16 # Min 4 Buffer
+seqBufferSize = 4 # Min 4 Buffer
 seqBufferOffset = 1 #2
 lastSequence = 0
 
@@ -48,7 +48,7 @@ def rgbmatrix_options():
   options = RGBMatrixOptions()
   options.multiplexing = 18
   options.row_address_type = 0
-  options.brightness = 40
+  options.brightness = 100
   options.rows = number_of_rows_per_panel
   options.cols = number_of_columns_per_panel
   options.chain_length = number_of_panels
@@ -57,13 +57,15 @@ def rgbmatrix_options():
   options.inverse_colors = True
   #options.led_rgb_sequence = "RGB"
   options.gpio_slowdown = 4
-  #options.pwm_lsb_nanoseconds = 150
-  options.show_refresh_rate = 1
+  options.pwm_lsb_nanoseconds = 50
+  options.show_refresh_rate = 0
   options.disable_hardware_pulsing = False
-  #options.scan_mode = 0
-  options.pwm_bits = 11
+  options.scan_mode = 1
+  options.pwm_bits = 8
+  options.pwm_dither_bits = 1
   options.daemon = 0
   options.drop_privileges = 0
+  options.pixel_mapper_config = 'U-mapper'
   return options;
 
 options = rgbmatrix_options()
@@ -163,18 +165,22 @@ class ArtNet(DatagramProtocol):
          idx = 0
          x = 0
          y = 0
-         #print(datastream)
-         while ((y < (display_size_y))):
-             r = datastream[idx]
-             canvas.SetPixel(x, y, r, 0, 0)
-             x += 1
-             idx += 1
-             if (x > (display_size_x - 1)):
-                 x = 0
-                 y += 1
+         try:
+             while ((y < (display_size_y))):
+                 if (datastream[idx] is not None):
+                     r = datastream[idx]
+                 #else:
+                 #    r = 0
+                     canvas.SetPixel(x, y, r, 0, 0)
+                 x += 1
+                 idx += 1
+                 if (x > (display_size_x - 1)):
+                     x = 0
+                     y += 1
 
-         canvas = display.SwapOnVSync(canvas)
-
+             canvas = display.SwapOnVSync(canvas)
+         except (IndexError):
+             print("IDX: {} DataLen: {}".format(idx,len(datastream)))
 
 reactor.listenUDP(6454, ArtNet())
 reactor.run()
