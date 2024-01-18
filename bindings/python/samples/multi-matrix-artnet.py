@@ -27,19 +27,22 @@ display_size_x = 32*3
 display_size_y = 16*2
 universum_start = 0
 universum_count = 26
-channel_per_univers = 510
-
+channel_per_univers = 512
+max_universe = 5
 # FrameBuffer
 
 frameBuffer = None
 frameBufferCounter = 0
 rgbframeLength = 0
 #Number of sequences to store in buffer
-seqBufferSize = 4 # Min 4 Buffer
+seqBufferSize = 64 # Min 4 Buffer
 seqBufferOffset = 1 #2
 lastSequence = 0
 
-frameArray = [[0, 0, 0, [0]]]
+currentUniverse = 0
+lastUniverse = 0
+
+frameArray = [[0, 0, [0]]]
 
 
 ### RGBMatrixSetting
@@ -74,18 +77,25 @@ canvas  = display.CreateFrameCanvas()
 
 class ArtNet(DatagramProtocol):
 
-    def addToFrameBufferArray(self, sequence, universe, rgb_length, data):
+    def addToFrameBufferArray(self, universe, data_length, data):
         global frameArray
-        if (sequence > 0):
-#           The sequence number is read from the array
-            frameSequenceInt = int(float(str(frameArray [0][0])))
-#           If the sequence number is 0, the initial array string has been recognised
-#           After filling it, the initial array must be removed
-            if (frameSequenceInt == 0):
-                frameArray.append([sequence, universe, rgb_length, data])
-                frameArray.pop(0)
-            else:
-                frameArray.append([sequence, universe, rgb_length, data])
+        global max_universe
+        global lastUniverse
+
+        ret = False
+
+        if (universe == lastUniverse + 1):
+            frameArray.append([universe,data_length,data])
+        elif (lastUniverse == max_universe):
+            if(universe == 0):
+                frameArray.clear()
+                frameArray.append([universe,data_length,data])
+                ret = True
+        else:
+            frameArray.clear()
+
+        lastUniverse = universe
+        return ret
 
     def cleanUpFrameBuffer(self, sequenceNr):
         global frameArray
@@ -96,6 +106,26 @@ class ArtNet(DatagramProtocol):
                 if (sequenceNr >= int(float(str(frameArray [bufferCounter][0])))):
                     frameArray.pop(bufferCounter)
             bufferCounter += 1
+
+    def getNextFrameBuffer(self):
+        global frameArray
+        global max_universe
+
+        finalFrameArray = []
+        finalFrameLength = 0
+
+        frameCounter = 0
+        bufferCounter = 0
+        bufferSize = max_universe + 1
+
+        while(bufferCounter < bufferSize):
+            finalFrameArray = finalFrameArray + frameArray[2]
+            finalFrameLength = finalFrameLength + int(frameArray[1])
+            bufferCounter += 1
+
+        frameArray.clear()
+
+        return (finalFrameArray, finalFrameLength)
 
 #   This function returns an entire sequence also all universe pulled together into an array
     def getSequenceFromFrameBuffer(self, sequenceNr):
@@ -140,38 +170,41 @@ class ArtNet(DatagramProtocol):
             rawbytes = list(data) #map(ord, data)
             opcode = rawbytes[8] + (rawbytes[9] << 8)
             protocolVersion = (rawbytes[10] << 8) + rawbytes[11]
-            #print("OpCode: {} Version: {}".format(opcode,protocolVersion))
+            #print("OpCode = {}".format(hex(opcode)))
             if ((opcode == 0x5000) and (protocolVersion >= 14)):
                 sequence = rawbytes[12]
                 physical = rawbytes[13]
                 sub_net = (rawbytes[14] & 0xF0) >> 4
                 universe = rawbytes[14] & 0x0F
                 net = rawbytes[15]
-                rgb_length = (rawbytes[16] << 8) + rawbytes[17]
-#               print("Sequence: {} Phy: {} SubNet: {} Universe: {} Net: {} RGB_Len: {}".format(sequence,physical,sub_net,universe,net,rgb_length))
-                (sequence, physical, sub_net, universe, net, rgb_length)
-                rgbdata = rawbytes[18:(rgb_length+18)]
+                data_frame_length = (rawbytes[16] << 8) + rawbytes[17]
+                #print("Sequence: {} Phy: {} SubNet: {} Universe: {} Net: {} RGB_Len: {}".format(sequence,physical,sub_net,universe,net,rgb_length))
+                #(sequence, physical, sub_net, universe, net, rgb_length)
+                data_frame = rawbytes[18:(data_frame_length+18)]
+                #print(rgbdata)
 #               self.addToFrameBufferArray(sequence,universe,rgb_length,rgbdata)
 #               Subnet and universe in one variable, so 256 universes are possible
-                self.addToFrameBufferArray(sequence,rawbytes[14],rgb_length,rgbdata)
-                if(lastSequence != sequence):
-                    frameBuffer, rgbframeLength = self.getSequenceFromFrameBuffer(sequence - seqBufferOffset)
-                    if(len(frameBuffer)):
-                       self.showDisplay(display_size_x,display_size_y,frameBuffer,rgbframeLength)
-                lastSequence = sequence
+                is_frame_full = self.addToFrameBufferArray(universe,data_frame_length,data_frame)
+                if(is_frame_full):
+                    frameBuffer, rgbframeLength = self.getNextFrameBuffer()
+                    print("Final length: {}".format(len(frameBuffer)))
+                    #if(len(frameBuffer)):
+                    #print("Sequence: {}-{}".format(sequence,lastSequence)) #rgbframeLength)
+                    #self.showDisplay(display_size_x,display_size_y,frameBuffer,rgbframeLength)
 
     def showDisplay(self, display_size_x, display_size_y, datastream, rgb_length):
          global canvas
          idx = 0
          x = 0
          y = 0
+#         print(datastream)
          try:
              while ((y < (display_size_y))):
-                 if (datastream[idx] is not None):
-                     r = datastream[idx]
+                 #if (datastream[idx] is not None):
+                 r = datastream[idx]
                  #else:
                  #    r = 0
-                     canvas.SetPixel(x, y, r, 0, 0)
+                 canvas.SetPixel(x, y, r, 0, 0)
                  x += 1
                  idx += 1
                  if (x > (display_size_x - 1)):
@@ -180,7 +213,7 @@ class ArtNet(DatagramProtocol):
 
              canvas = display.SwapOnVSync(canvas)
          except (IndexError):
-             print("IDX: {} DataLen: {}".format(idx,len(datastream)))
+             ... #print("ERROR! IDX: {} DataLen: {}".format(idx,len(datastream)))
 
 reactor.listenUDP(6454, ArtNet())
 reactor.run()
