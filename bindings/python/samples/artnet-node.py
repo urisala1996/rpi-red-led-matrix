@@ -4,6 +4,7 @@ from twisted.internet import reactor
 from struct import pack, unpack
 from operator import itemgetter
 from multiprocessing.connection import Client
+import time
 
 ### Variables
 
@@ -114,10 +115,10 @@ class FrameSequencer:
         self.is_ready = False
 #        print("[CONCAT] Reset concatenator state.")
 
-DataFrameSequencer = FrameSequencer(NUM_UNIVERSES)
+#DataFrameSequencer = FrameSequencer(NUM_UNIVERSES)
 
-address = ('127.0.0.1', 6000)
-matrix_conn = Client(address, authkey=b'dietpi')
+#address = ('127.0.0.1', 6000)
+#matrix_conn = Client(address, authkey=b'dietpi')
 
 class ArtNet(DatagramProtocol):
 
@@ -135,5 +136,30 @@ class ArtNet(DatagramProtocol):
                     #Send Pixels to Matrix Controller
                     matrix_conn.send(pixel_data)
 
-reactor.listenUDP(6454, ArtNet())
-reactor.run()
+
+if __name__ == '__main__':
+
+    DataFrameSequencer = FrameSequencer(NUM_UNIVERSES)
+    address = ('127.0.0.1', 6000)
+
+    while True:
+        try:
+            with Client(address,authkey=b'dietpi') as matrix_conn:
+                print("Connected to Matrix!")
+
+            print("Connection closed")
+            time.sleep(2)
+
+        except ConnectionRefusedError:
+            print("Connection refused... trying again")
+            time.sleep(2)
+            continue
+        except KeyboardInterrupt:
+            print("Request to end Artnet Node")
+            break
+        except Exception as e:
+            print("Fatal Error occurred: {}".format(e))
+            break
+    #matrix_conn = Client(address,authkey=b'dietpi')
+    #reactor.listenUDP(6454, ArtNet())
+    #reactor.run()

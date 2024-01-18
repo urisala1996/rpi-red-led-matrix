@@ -66,27 +66,45 @@ class TCPMatrixDisplay(object):
         except (IndexError):
             print("ERROR! IDX: {} DataLen: {}".format(idx,data_len))
 
-    def run_receiver(self):
+    def receive_data(self,socket):
+        rx_len = self.DISPLAY_SIZE_X * self.DISPLAY_SIZE_Y
+        try:
+            while True:
+                rx_data = socket.recv()
+                if (rx_data is not None):
+                    #print(rx_data)
+                    matrix_data = list(rx_data)
+                    self.showDisplay(matrix_data,data_len=len(matrix_data))
 
-        listener = Listener(self.ARTNET_NODE_ADDR,authkey=b'dietpi')
-        node_conn = listener.accept()
-        print("Connection accepted from: {}".format(listener.last_accepted))
-
-        while True:
-            rx_data = node_conn.recv()
-            if (rx_data is not None):
-                #print(rx_data)
-                matrix_data = list(rx_data)
-                self.showDisplay(matrix_data,data_len=len(matrix_data))
-
-            if rx_data == 'close':
-                node_conn.close()
-                break
-
-        listener.close()
+                if rx_data == 'close':
+                    socket.close()
+                    break
+        except EOFError:
+            print("[MatrixController] EOF Error")
+        except Exception as e:
+            print("[MatrixController] Fatal error occurred: {}".format(e))
+        finally:
+            socket.close()
+            print("[MatrixController] Socket closed")
 
 # Main function
 if __name__ == "__main__":
-    print("Receiver Process for uncompressed Pixel Data")
+
+    print("--- Receiver Process for Pixel Data ---")
+
     matrixController = TCPMatrixDisplay()
-    matrixController.run_receiver()
+
+    try:
+        listener = Listener(matrixController.ARTNET_NODE_ADDR,authkey=b'dietpi')
+        node_sckt = listener.accept()
+        print("Connection accepted from: {}".format(listener.last_accepted))
+
+        matrixController.receive_data(node_sckt)
+
+    except KeyboardInterrupt:
+        print("\nRequest to terminate by the user")
+    except Exception as e:
+        print("Fatal error occurred: {}".format(e))
+    finally:
+        print("Connection closed")
+        listener.close()
