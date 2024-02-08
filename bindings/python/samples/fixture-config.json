@@ -1,11 +1,24 @@
 {
         "version":"1.0",
-        "ignoreUpdates":false,
-        "settings":{
-                "universe":0,
-                "panel_width":32,
-		"panel_height":16,
-		"num_panels_width":2,
-		"num_panels_height":1
-        }
+        "general-settings":
+		{	
+		"num_panels_width":4,
+		"num_panels_height":2
+        	},
+	"matrix-settings":
+		{
+		"panel_w":32,
+		"panel_h":16,
+		"brightness":100,
+		"gpio_slowdown":3,
+		"pwm_lsb_nanoseconds":100,
+		"pwm_bits":11,
+		"pwm_dither_bits":1
+		},
+	"artnet-settings":
+		{
+		"socket-ip":"127.0.0.1",
+		"socket-port":6000,
+		"dietpi-ip":"192.168.1.144"
+		}
 }

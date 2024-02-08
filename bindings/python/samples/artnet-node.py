@@ -5,33 +5,11 @@ from struct import pack, unpack
 from operator import itemgetter
 from multiprocessing.connection import Client
 import time
+import json
 
-### Variables
 
 # Art-Net Variables
-
-display_size_x = 32*3
-display_size_y = 16*2
-universum_start = 0
-universum_count = 26
-channel_per_univers = 510
-
 NUM_UNIVERSES = 6
-UniverseIdx = 0
-UniverseLast = 0
-# FrameBuffer
-
-frameBuffer = None
-frameBufferCounter = 0
-rgbframeLength = 0
-
-#Number of sequences to store in buffer
-seqBufferSize = 4 # Min 4 Buffer
-seqBufferOffset = 1 #2
-lastSequence = 0
-
-FrameArray = bytearray()
-FrameArrayLen = 0
 
 class ArtnetPacket:
 
@@ -103,7 +81,7 @@ class FrameSequencer:
 
         else:
             # Discard out-of-order chunks
-            print(f"[CONCAT] Received out-of-order chunk with sequence number {sequence_number}. Discarding.")
+            print(f"[CONCAT] Received{sequence_number} instead of {self.expected_sequence}. Discarding.")
 
         return (self.is_ready, self.buffer_len, self.buffer)
 
@@ -113,12 +91,7 @@ class FrameSequencer:
         self.expected_sequence = 0
         self.buffer_len = 0
         self.is_ready = False
-#        print("[CONCAT] Reset concatenator state.")
 
-#DataFrameSequencer = FrameSequencer(NUM_UNIVERSES)
-
-#address = ('127.0.0.1', 6000)
-#matrix_conn = Client(address, authkey=b'dietpi')
 
 class ArtNet(DatagramProtocol):
 
@@ -139,27 +112,54 @@ class ArtNet(DatagramProtocol):
 
 if __name__ == '__main__':
 
+    with open('fixture-config.json') as f:
+        config = json.load(f)
+
+    NUM_UNIVERSES = ( config['general-settings']['num_panels_width'] * config['general-settings']['num_panels_height'] * config['matrix-settings']['panel_w'] * config['matrix-settings']['panel_h']) / 512
+
+    ADDRESS = (config['artnet-settings']['socket-ip'],config['artnet-settings']['socket-port'])
+
     DataFrameSequencer = FrameSequencer(NUM_UNIVERSES)
     address = ('127.0.0.1', 6000)
+    connection_retries = 10
+    print("--- Starting Process from Artnet Data to RX Socket")
+    print("--- Number of Universes: {}".format(NUM_UNIVERSES))
 
     while True:
         try:
-            with Client(address,authkey=b'dietpi') as matrix_conn:
-                print("Connected to Matrix!")
+            with Client(ADDRESS,authkey=b'dietpi') as matrix_conn:
+                print("Connected to Socket-Matrix")
+                connection_retries = 5
+                reactor.listenUDP(6454,ArtNet())
+                reactor.run()
 
             print("Connection closed")
             time.sleep(2)
 
         except ConnectionRefusedError:
-            print("Connection refused... trying again")
-            time.sleep(2)
-            continue
+            if (connection_retries):
+                connection_retries -= 1
+                print("Connection refused... retries: {}".format(connection_retries))
+                time.sleep(3)
+                continue
+            else:
+                print("No more retries! BYE")
+                break
+
         except KeyboardInterrupt:
+            #reactor.stop()
+            #matrix_conn.close()
             print("Request to end Artnet Node")
+            exit(0)
             break
+
+        except BrokenPipeError:
+            connection_retries = 0
+            time.sleep(1)
+            reactor.stop()
+            break
+
         except Exception as e:
             print("Fatal Error occurred: {}".format(e))
             break
-    #matrix_conn = Client(address,authkey=b'dietpi')
-    #reactor.listenUDP(6454, ArtNet())
-    #reactor.run()
+
