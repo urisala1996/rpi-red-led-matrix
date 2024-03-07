@@ -70,6 +70,46 @@ struct HardwareMapping matrix_hardware_mappings[] = {
    * This is used if you have an Adafruit HAT in the default configuration
    */
   {
+    .name          = "adafruit-hat-p10",
+
+    .output_enable = GPIO_BIT(4),
+    .clock         = GPIO_BIT(17),
+    .strobe        = GPIO_BIT(21),
+
+    .a             = GPIO_BIT(22),
+    .b             = GPIO_BIT(26),
+    .c             = GPIO_BIT(27),
+    .d             = GPIO_BIT(20),
+    .e             = GPIO_BIT(24),  /* Needs manual wiring, see README.md */
+
+    .p0_r1         = GPIO_BIT(5),   // ONLY DATA PIN USED FOR CHAIN 0
+    .p0_g1         = GPIO_BIT(19),
+    .p0_b1         = GPIO_BIT(19),
+    .p0_r2         = GPIO_BIT(19),
+    .p0_g2         = GPIO_BIT(19),
+    .p0_b2         = GPIO_BIT(19),
+
+    /* Chain 1 */
+    .p1_r1         = GPIO_BIT(13), //GPIO_BIT(12), // ONLY DATA PIN USED FOR CHAIN 0
+    .p1_g1         = GPIO_BIT(19),
+    .p1_b1         = GPIO_BIT(19),
+    .p1_r2         = GPIO_BIT(19),
+    .p1_g2         = GPIO_BIT(19),
+    .p1_b2         = GPIO_BIT(19),
+
+    /* Chain 2 */
+    .p2_r1         = GPIO_BIT(6),  //GPIO_BIT(14), // ONLY DATA PIN USED FOR CHAIN 0
+    .p2_g1         = GPIO_BIT(19),  
+    .p2_b1         = GPIO_BIT(19),  
+    .p2_r2         = GPIO_BIT(19),
+    .p2_g2         = GPIO_BIT(19),
+    .p2_b2         = GPIO_BIT(19),
+  },
+
+  /*
+   * This is used if you have an Adafruit HAT in the default configuration
+   */
+  {
     .name          = "adafruit-hat",
 
     .output_enable = GPIO_BIT(4),

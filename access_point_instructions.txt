@@ -1,0 +1,26 @@
+#https://raspberrypi-guide.github.io/networking/create-wireless-access-point
+
+sudo apt install dnsmasq hostapd
+#Since config is still not done, disable modules
+sudo systemctl stop dnsmasq
+sudo systemctl stop hostapd
+sudo apt-get install dhcpcd5
+
+#Configure a static IP
+sudo nano /etc/dhcpcd.conf
+#Write in the end
+interface wlan0
+    static ip_address=192.168.4.1/24
+    nohook wpa_supplicant
+
+sudo service dhcpcd restart
+
+sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sudo nano /etc/dnsmasq.conf
+#Write in the end
+interface=wlan0
+dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
+
+sudo systemctl start dnsmasq
+
+
