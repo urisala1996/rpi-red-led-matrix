@@ -9,7 +9,7 @@ import json
 
 
 # Art-Net Variables
-NUM_UNIVERSES = 6
+NUM_UNIVERSES = 12
 
 class ArtnetPacket:
 
@@ -81,7 +81,7 @@ class FrameSequencer:
 
         else:
             # Discard out-of-order chunks
-            print(f"[CONCAT] Received{sequence_number} instead of {self.expected_sequence}. Discarding.")
+            print(f"[CONCAT] Received {sequence_number} instead of {self.expected_sequence}. Discarding.")
 
         return (self.is_ready, self.buffer_len, self.buffer)
 
@@ -103,6 +103,7 @@ class ArtNet(DatagramProtocol):
             rx_artnet_packet = ArtnetPacket.unpack_artnet_packet(data)
             #print(rx_artnet_packet)
             if ((rx_artnet_packet.op_code == 80) and (rx_artnet_packet.ver >= 14)):
+                #print(rx_artnet_packet.universe)
                 universe_data = bytearray(rx_artnet_packet.data)
                 pixel_data_ready, pixel_data_len, pixel_data = DataFrameSequencer.receive_chunk(universe_data, rx_artnet_packet.length, rx_artnet_packet.universe)
                 if (pixel_data_ready is True):
@@ -112,12 +113,12 @@ class ArtNet(DatagramProtocol):
 
 if __name__ == '__main__':
 
-    with open('fixture-config.json') as f:
+    with open('/home/dietpi/rpi-red-led-matrix/bindings/python/samples/fixture-config.json') as f:
         config = json.load(f)
 
-    NUM_UNIVERSES = ( config['general-settings']['num_panels_width'] * config['general-settings']['num_panels_height'] * config['matrix-settings']['panel_w'] * config['matrix-settings']['panel_h']) / 512
+    NUM_UNIVERSES = int(( int(config['general-settings']['num_panels_width']) * int(config['general-settings']['num_panels_height']) * int(config['matrix-settings']['panel_w']) * int(config['matrix-settings']['panel_h'])) / 512)
 
-    ADDRESS = (config['artnet-settings']['socket-ip'],config['artnet-settings']['socket-port'])
+    ADDRESS = (config['artnet-settings']['socket-ip'],int(config['artnet-settings']['socket-port']))
 
     DataFrameSequencer = FrameSequencer(NUM_UNIVERSES)
     address = ('127.0.0.1', 6000)

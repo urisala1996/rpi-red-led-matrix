@@ -1,0 +1,25 @@
+{% extends "base.html" %} {% block title %}Home{% endblock %} {% block content %}
+    
+    <div>
+        <h2 class="mb-3">Configuration file</h2>
+    </div>
+    <div>
+        <form action="{{ url_for('views.submit_config') }}" method="POST">
+            {%for section in config_data%}
+            <hr class="my-4">
+            <h4 class="mb-3">{{section}}</h4>
+            {%for parameter in config_data[section]%} 
+            <div class="col-12">
+                <label for={{parameter}} class="form-label">{{parameter}}</label>
+                <div class="input-group has-validation">
+                    <input type="text" class="form-control" name={{parameter}} value={{config_data[section][parameter]}} required>
+                </div>
+            </div>
+            {%endfor%}
+            {%endfor%}
+            <hr class="my-4">
+            <button class="w-100 btn btn-primary btn-lg" type="submit">Update config</button>
+        </form>
+    </div>
+    
+{% endblock %}

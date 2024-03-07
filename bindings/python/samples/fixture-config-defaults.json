@@ -1,0 +1,27 @@
+{
+	"general-settings":
+		{	
+			"num_panels_width":4,
+			"num_panels_height":3
+    	},
+
+	"matrix-settings":
+		{
+			"panel_w":32,
+			"panel_h":16,
+			"brightness":100,
+			"gpio_slowdown":3,
+			"pwm_lsb_nanoseconds":100,
+			"pwm_bits":11,
+			"pwm_dither_bits":1
+		},
+		
+	"artnet-settings":
+		{
+			"socket-ip":"127.0.0.1",
+			"socket-port":6000,
+			"dietpi-ip":"192.168.1.144",
+			"artnet-wifi":"192.168.42.1",
+			"auto-start":true
+		}
+}

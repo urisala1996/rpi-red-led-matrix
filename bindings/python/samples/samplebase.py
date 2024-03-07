@@ -43,16 +43,16 @@ class SampleBase(object):
         options = RGBMatrixOptions()
 
         #if self.args.led_gpio_mapping != None:
-        options.hardware_mapping = "adafruit-hat" #self.args.led_gpio_mapping
-        options.rows = self.args.led_rows
-        options.cols = self.args.led_cols
-        options.chain_length = self.args.led_chain
-        options.parallel = self.args.led_parallel
+        options.hardware_mapping = "adafruit-hat-p10" #self.args.led_gpio_mapping
+        options.rows = 16#self.args.led_rows
+        options.cols = 32#self.args.led_cols
+        options.chain_length = 4#self.args.led_chain
+        options.parallel = 3#self.args.led_parallel
         options.row_address_type = 0
         options.multiplexing = 18
         options.pwm_bits = 11
         options.brightness = 20
-        options.pwm_lsb_nanoseconds = self.args.led_pwm_lsb_nanoseconds
+        options.pwm_lsb_nanoseconds = 100#self.args.led_pwm_lsb_nanoseconds
         options.led_rgb_sequence = self.args.led_rgb_sequence
         options.pixel_mapper_config = self.args.led_pixel_mapper
         options.panel_type = self.args.led_panel_type
