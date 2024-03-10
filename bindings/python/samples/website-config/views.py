@@ -28,14 +28,14 @@ def home():
 def matrix_config():
     new_config = ''
     if request.method == 'GET':
-        with open('../fixture-config.json', 'r') as f:
+        with open('/home/dietpi/rpi-red-led-matrix/bindings/python/samples/fixture-config.json', 'r') as f:
             config = json.load(f)
 
         return render_template("matrix-config.html", config_data = config)
 
 @views.route('/submit_config', methods=['GET','POST'])
 def submit_config():
-    with open('../fixture-config.json', 'r') as f:
+    with open('/home/dietpi/rpi-red-led-matrix/bindings/python/samples/fixture-config.json', 'r') as f:
         config = json.load(f)
     
     for section in config:
@@ -45,7 +45,7 @@ def submit_config():
             print("{}:{}".format(parameter,new_value))
             config[section][parameter] = new_value
         
-    with open('../fixture-config.json', 'w') as f:
+    with open('/home/dietpi/rpi-red-led-matrix/bindings/python/samples/fixture-config.json', 'w') as f:
         json.dump(config, f)
     
     return redirect(url_for('views.matrix_config'))
