@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, request, url_for, flash
+from flask import Blueprint, render_template, request, url_for, flash, redirect
 import json
 import subprocess
+from subprocess import check_output
 from subprocess import Popen
 import time
 
@@ -8,17 +9,20 @@ views = Blueprint(__name__, "views")
 
 @views.route("/", methods=['GET','POST'])
 def home():
-    system_status = 0
+    sys = dict()
+    sys['status'] = 0
+    sys['ip'] = "0.0.0.0"
 
-    if request.method == 'POST':
-        #new_config = request.form['form-config']
-        #print(new_config)
-        return render_template('index.html')
-    else:
-        ret = subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/status_artnet.sh")
-        system_status = ret.returncode
-        print("System status: {}".format(system_status))
-        return render_template("index.html", status = system_status)
+    if request.method == 'GET':
+        ret = subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/scripts/status_artnet.sh")
+        sys['status'] = ret.returncode
+
+        get_ipp_cmd = "/home/dietpi/rpi-red-led-matrix/bindings/python/samples/scripts/get_ipaddr.sh"
+        p = subprocess.Popen([get_ipp_cmd], stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        sys['ip'] = str(out.decode("utf-8"))
+        
+        return render_template("index.html", sys = sys)
 
 @views.route("/matrix-config", methods=['GET','POST'])
 def matrix_config():
@@ -43,45 +47,53 @@ def submit_config():
         
     with open('../fixture-config.json', 'w') as f:
         json.dump(config, f)
-
-    # Now get the dictionary and put it into a json
-    # Save json to new fixture-config.json
     
-    return render_template("matrix-config.html", config_data = config)
+    return redirect(url_for('views.matrix_config'))
+
+@views.route('/submit_defaults', methods=['GET','POST'])
+def submit_defaults():
+    # Not implemented
+    return redirect(url_for('views.matrix_config'))
 
 @views.route('/sys_test', methods=['GET','POST'])
 def sys_test():
     print ("Testing fixture...")
-    return render_template("index.html", status = 1)
+    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/scripts/run_test.sh")
+    return redirect(url_for('views.home'))
+
+@views.route('/sys_test_stop', methods=['GET','POST'])
+def sys_test_stop():
+    print ("Stopping test fixture...")
+    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/scripts/stop_test.sh")
+    return redirect(url_for('views.home'))
 
 @views.route('/sys_start', methods=['GET','POST'])
 def sys_start():
     print ("Starting...")
-    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/run_artnet.sh")
-    return render_template("index.html", status = 0)
+    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/scripts/run_artnet.sh")
+    return redirect(url_for('views.home'))
 
 @views.route('/sys_stop', methods=['GET','POST'])
 def sys_stop():
     print ("Stopping...")
-    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/stop_artnet.sh")
-    return render_template("index.html", status = 1)
+    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/scripts/stop_artnet.sh")
+    return redirect(url_for('views.home'))
 
 @views.route('/sys_restart', methods=['GET','POST'])
 def sys_restart():
     print ("Restarting firmware...")
-    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/stop_artnet.sh")
+    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/scripts/stop_artnet.sh")
     time.sleep(2)
-    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/run_artnet.sh")
-    return render_template("index.html", status = 0)
+    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/scripts/run_artnet.sh")
+    return redirect(url_for('views.home'))
 
 @views.route('/sys_reboot', methods=['GET','POST'])
 def sys_reboot():
     #if request.method == 'POST':
     print ("Rebooting System...")
-    return render_template("index.html", status = 1)
-
-
-
-
-    
-    
+    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/scripts/stop_artnet.sh")
+    time.sleep(1)
+    subprocess.run("/home/dietpi/rpi-red-led-matrix/bindings/python/samples/scripts/stop_test.sh")
+    time.sleep(2)
+    subprocess.call(["sudo","reboot"])
+    return redirect(url_for('views.home'))

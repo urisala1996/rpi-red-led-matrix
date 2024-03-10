@@ -2,6 +2,7 @@ import argparse
 import time
 import sys
 import os
+import json
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/..'))
 from rgbmatrix import RGBMatrix, RGBMatrixOptions
@@ -40,26 +41,30 @@ class SampleBase(object):
     def process(self):
         self.args = self.parser.parse_args()
 
+        with open('/home/dietpi/rpi-red-led-matrix/bindings/python/samples/fixture-config.json') as f:
+            config = json.load(f)
+
         options = RGBMatrixOptions()
 
         #if self.args.led_gpio_mapping != None:
-        options.hardware_mapping = "adafruit-hat-p10" #self.args.led_gpio_mapping
-        options.rows = 16#self.args.led_rows
-        options.cols = 32#self.args.led_cols
-        options.chain_length = 4#self.args.led_chain
-        options.parallel = 3#self.args.led_parallel
+        options.hardware_mapping = 'adafruit-hat-p10'
+        options.rows = int(config['matrix-settings']['panel_h'])
+        options.cols = int(config['matrix-settings']['panel_w'])
+        options.chain_length = int(config['general-settings']['num_panels_width'])
+        options.parallel = int(config['matrix-settings']['parallel'])
         options.row_address_type = 0
         options.multiplexing = 18
-        options.pwm_bits = 11
+        options.pwm_bits = int(config['matrix-settings']['pwm_bits'])
         options.brightness = 20
-        options.pwm_lsb_nanoseconds = 100#self.args.led_pwm_lsb_nanoseconds
+        options.pwm_lsb_nanoseconds = int(config['matrix-settings']['pwm_lsb_nanoseconds'])
         options.led_rgb_sequence = self.args.led_rgb_sequence
-        options.pixel_mapper_config = self.args.led_pixel_mapper
+        if config['matrix-settings']['mapper'] == "U-mapper":
+            options.pixel_mapper_config = 'U-mapper'
         options.panel_type = self.args.led_panel_type
         options.inverse_colors = True
-        options.pwm_dither_bits = 1
-        options.show_refresh_rate = 1
-        options.gpio_slowdown = 2
+        options.pwm_dither_bits = int(config['matrix-settings']['pwm_dither_bits'])
+        options.show_refresh_rate = 0
+        options.gpio_slowdown = int(config['matrix-settings']['gpio_slowdown'])
         options.disable_hardware_pulsing = False
         options.drop_privileges=False
 

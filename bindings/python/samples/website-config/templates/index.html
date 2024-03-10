@@ -6,13 +6,18 @@
     </div>
 
     <div class="container">
+        <h5 class="fs-2 text-body-emphasis">Eth0 IP Address</h5>
+        <p>{{sys['ip']}}</p>
+    </div>
+
+    <div class="container">
     <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
 
         <div class="col d-flex align-items-start">
         <div>
             <h3 class="fs-2 text-body-emphasis">Current status</h3>
             <p>Monitor if system is running properly</p>
-            {% if status == 0 %}
+            {% if sys['status'] == 0 %}
             <a id="status_monitoring" class="btn btn-success">
                 System is running
             </a>
@@ -24,54 +29,48 @@
         </div>
         </div>
 
+        <h3 class="fs-2 text-body-emphasis">System Control</h3>
         <div class="col d-flex align-items-start">
-        <div>
-            <h3 class="fs-2 text-body-emphasis">System Control</h3>
-            <form method="POST" action="{{ url_for('views.sys_start') }}">
-                <input type=submit class="btn btn-success" name="start_btn" value="Start"></input>
-            </form>
-            <form method="POST" action="{{ url_for('views.sys_stop') }}">
-                <input type=submit class="btn btn-danger" name="stop_btn" value="Stop"></input>
-            </form>
+            <div>
+                <form method="POST" action="{{ url_for('views.sys_start') }}">
+                    <input type=submit class="btn btn-success" name="start_btn" value="Start"></input>
+                </form>
+            </div>
+            <div></div>
+            <div>
+                <form method="POST" action="{{ url_for('views.sys_stop') }}">
+                    <input type=submit class="btn btn-danger" name="stop_btn" value="Stop"></input>
+                </form>
+            </div>
         </div>
-        
-        </div>
-    </div>
-    </div>
 
-    <div class="container">
-    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-
+        <h3 class="fs-2 text-body-emphasis">Test System</h3>
+        <p>Test demo to check configuration</p>
         <div class="col d-flex align-items-start">
-        <div>
             <form method="POST" action="{{ url_for('views.sys_test') }}">
-                <h3 class="fs-2 text-body-emphasis">Test System</h3>
-                <p>Test demo to check configuration</p>
-                <input type=submit class="btn btn-primary" name="test_btn" value="Test"></input>
+                <input type=submit class="btn btn-primary" name="test_btn" value="Run Test"></input>
+            </form>
+            <form method="POST" action="{{ url_for('views.sys_test_stop') }}">
+                <input type=submit class="btn btn-danger" name="test_stop_btn" value="Stop Test"></input>
             </form>
         </div>
-        </div>
 
-
-        <div class="col d-flex align-items-start">
+        <h3 class="fs-2 text-body-emphasis">Restart</h3>
+        <p>Restart firmware if there is any error or config has changed</p>
         <div>
             <form method="POST" action="{{ url_for('views.sys_restart') }}">
-                <h3 class="fs-2 text-body-emphasis">Restart</h3>
-                <p>Restart firmware if there is any error or config has changed</p>
                 <input type=submit class="btn btn-warning" name="restart_btn" value="Restart"></input>
             </form>
         </div>
-        </div>
 
-        <div class="col d-flex align-items-start">
+        <h3 class="fs-2 text-body-emphasis">Reboot System</h3>
+        <p>Reboot RPI for major failures</p>
         <div>
             <form method="POST" action="{{ url_for('views.sys_reboot') }}">
-                <h3 class="fs-2 text-body-emphasis">Reboot System</h3>
-                <p>Reboot RPI for major failures</p>
                 <input type=submit class="btn btn-danger" name="sys_reboot" value="Reboot"></input>
             </form>
         </div>
-        </div>
+
     </div>
     </div>
 

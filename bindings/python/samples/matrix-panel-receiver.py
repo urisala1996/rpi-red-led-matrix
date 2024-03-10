@@ -8,7 +8,6 @@ class TCPMatrixDisplay(object):
     def __init__(self,config):
         
         self.config = config
-        
         self.num_panels = int(self.config['general-settings']['num_panels_width']) * int(self.config['general-settings']['num_panels_height'])
         self.display_size_x = int(self.config['general-settings']['num_panels_width']) * int(self.config['matrix-settings']['panel_w'])
         self.display_size_y = int(self.config['general-settings']['num_panels_height']) * int(self.config['matrix-settings']['panel_h'])
@@ -25,7 +24,7 @@ class TCPMatrixDisplay(object):
         options.rows = int(self.config['matrix-settings']['panel_h'])
         options.cols = int(self.config['matrix-settings']['panel_w'])
         options.chain_length = int(self.config['general-settings']['num_panels_width'])
-        options.parallel = 3
+        options.parallel = int(self.config['matrix-settings']['parallel'])
         options.hardware_mapping = 'adafruit-hat-p10'
         options.inverse_colors = True
         options.gpio_slowdown = int(self.config['matrix-settings']['gpio_slowdown'])
@@ -37,7 +36,9 @@ class TCPMatrixDisplay(object):
         options.pwm_dither_bits = int(self.config['matrix-settings']['pwm_dither_bits'])
         options.daemon = 0
         options.drop_privileges = 0
-        #options.pixel_mapper_config = 'U-mapper'
+        if self.config['matrix-settings']['mapper'] == "U-mapper":
+            options.pixel_mapper_config = 'U-mapper'
+
         return options
 
     def showDisplay(self, datastream, data_len=None):
